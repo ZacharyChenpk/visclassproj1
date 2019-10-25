@@ -3,80 +3,290 @@
 	<head>
 		<meta charset="utf-8">
 		<title>D3: A simple, unstyled axis</title>
-		<script src="https://d3js.org/d3.v5.min.js"></script>
+		<script src="https://d3js.org/d3.v4.min.js"></script>
 		<style type="text/css">
 			/* No style rules here yet */
 		</style>
 	</head>
 	<body>
 		<script type="text/javascript">
-			var rowConverter = function(d) {
+			var rowConverter1 = function(d) {
 				return {
 					subject: d.subject,
-					ac_money: parseFloat(d.ac_money)
+					ac_money: parseFloat(d.ac_money),
+					ac_item: parseFloat(d.ac_item),
+					app_item: parseFloat(d.app_item),
+					app_money: parseFloat(d.app_money),
+					en_name: d.en_name
 				};
 			}
-			var data;
+			var rowConverter2 = function(d) {
+				return {
+					subject: d.subject,
+					ac_money: parseFloat(d.ac_money),
+					ac_item: parseFloat(d.ac_item),
+					app_item: parseFloat(d.app_item),
+					app_money: parseFloat(d.app_money),
+					gg_item: parseFloat(d.app_item) - parseFloat(d.ac_item),
+					gg_money: parseFloat(d.app_money) - parseFloat(d.ac_money)
+				};
+			}
+			var data, data2;
 			var w = 40, //柱宽度
-			    height = 500,   //画布高度
-			    width = 600,  //画布宽度
+			    height = 600,   //画布高度
+			    width = 900,  //画布宽度
 			    left = 50,
 			    bottom = 20;
-			//创建svg画布
-			var svg = d3.select('body')
-			    .append('svg')
-			    .attr('width',width)
-			    .attr('height',height)
-			    .style('margin-left','100px')
-			    .style('padding','20px')
-			    .style('border','1px solid green')
-			d3.csv("data1.csv", rowConverter, function(d){
+			    padding = 30;
+
+			d3.csv("data1.csv", rowConverter1, function(d){
+				console.log("A")
 				data = d
-				
-				//绘制数据柱状
-				svg.selectAll('rect')
-				    .data(data)
-				    .enter()
-				    .append('rect')
-				    .attr('x',function(d,i){
-				        return left + w * i
-				    })
-				    .attr('y',function(d,i){
-				        return height - d.ac_money - bottom;
-				    })
-				    .attr('width',w-5)
-				    .attr('height',function(d,i){
-				        return d.ac_money
-				    })
-				    .attr('fill','steelblue')
-				//在柱头部标识数据
-				svg.selectAll('text')
-				    .data(data)
-				    .enter()
-				    .append('text')
-				    .attr('fill','white')
-				    .attr('text-anchor','middle')
-				    .attr('font-size','12px')
-				    .attr('x',function(d,i){
-				        return left +  w * i
-				    })
-				    .attr('y',function(d,i){
-				        return height - d.ac_money - bottom;
-				    })
-				    .attr('dx',function(d,i){
-				        return w / 2
-				    })
-				    .attr('dy','1rem')
-				    .text(d.subject)
+				len = data.length
 				//创建线性比例尺
-				var x = d3.scaleLinear().domain([0,len]).range([0,480]);
-				var y = d3.scaleLinear().domain([0,d3.max(data,function(d) {return d.ac_money;})]).range([600,0]);
+				var x = d3.scaleLinear().domain([0,len]).range([padding, width-padding]);
+				var y = d3.scaleLinear().domain([0,d3.max(data,function(d) {return d.app_money;})]).range([height-padding,padding]);
+				var y2 = d3.scaleLinear().domain([0,d3.max(data,function(d) {return d.app_item;})]).range([height-padding,padding]);
 				//创建坐标轴
 				var axisX = d3.axisBottom().scale(x).ticks(len);
 				var axisY = d3.axisLeft().scale(y).ticks(len);
+				//创建svg画布
+				var svg = d3.select('body')
+				    .append('svg')
+				    .attr('width',width)
+				    .attr('height',height)
+				    .style('margin-left','100px')
+				    .style('padding','20px')
+				    .style('border','1px solid green')
+				//绘制数据柱状
+				svg.selectAll('rect#app_money')
+				    .data(data)
+				    .enter()
+				    .append('rect')
+				    .attr('id', 'app_money')
+				    .attr('x',function(d,i){
+				        return x(i)+w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return y(d.app_money);
+				    })
+				    .attr('width',w)
+				    .attr('height',function(d,i){
+				        return height - y(d.app_money) - padding;
+				    })
+				    .attr('fill','gray')
+
+				svg.selectAll('rect#app_item')
+				    .data(data)
+				    .enter()
+				    .append('rect')
+				    .attr('id', 'app_item')
+				    .attr('x',function(d,i){
+				        return x(i)+5*w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return y2(d.app_item);
+				    })
+				    .attr('width',w)
+				    .attr('height',function(d,i){
+				        return height - y2(d.app_item) - padding;
+				    })
+				    .attr('fill','gray')
+
+				svg.selectAll('rect#ac_money')
+				    .data(data)
+				    .enter()
+				    .append('rect')
+				    .attr('id', 'ac_money')
+				    .attr('x',function(d,i){
+				        return x(i)+w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return y(d.ac_money);
+				    })
+				    .attr('width',w)
+				    .attr('height',function(d,i){
+				        return height - y(d.ac_money) - padding;
+				    })
+				    .attr('fill','steelblue')
+
+				svg.selectAll('rect#ac_item')
+				    .data(data)
+				    .enter()
+				    .append('rect')
+				    .attr('id', 'ac_item')
+				    .attr('x',function(d,i){
+				        return x(i)+5*w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return y2(d.ac_item);
+				    })
+				    .attr('width',w)
+				    .attr('height',function(d,i){
+				        return height - y2(d.ac_item) - padding;
+				    })
+				    .attr('fill','orange')
+				console.log(data)
+				for (var iid = 0; iid < len; iid++){
+					var id = iid;
+			    	d3.csv("data1/"+data[id].en_name+".csv", rowConverter2, function(dd){
+			    		console.log(data[id].en_name)
+			    		console.log(dd)
+			    		data2 = dd;
+			    		l2 = data2.length;
+			    		var cumul1 = [],
+							cumul2 = [];
+			    		for (var i = 0; i < l2; i++){
+			    			if (i === 0){
+			    				cumul1.push(dd[i].ac_money);
+			    				cumul2.push(dd[i].ac_item);
+			    			}else{
+			    				cumul1.push(cumul1[i-1]+dd[i].ac_money);
+			    				cumul2.push(cumul2[i-1]+dd[i].ac_item);
+			    			}
+			    		}
+			    		cumul1 = cumul1.reverse()
+			    		cumul2 = cumul2.reverse()
+			    		svg.selectAll("rect#ac_money"+id)
+						    .data(data2)
+						    .enter()
+						    .append('rect')
+						    .attr('id', "ac_money"+id)
+						    .attr('x',x(id)+w/4)
+						    .attr('y',function(d,i){
+						        return y(cumul1[i]);
+						    })
+						    .attr('width',w)
+						    .attr('height',function(d,i){
+						        return height - y(cumul1[i]) - padding;
+						    })
+						    .attr('fill',function(d,i){
+						    	return "rgb(0,0,"+(100+Math.round(150*i/l2))+")";
+						    })
+
+						svg.selectAll("rect#ac_item"+id)
+						    .data(data2)
+						    .enter()
+						    .append('rect')
+						    .attr('id', "ac_item"+id)
+						    .attr('x',x(id)+5*w/4)
+						    .attr('y',function(d,i){
+						        return y2(cumul2[i]);
+						    })
+						    .attr('width',w)
+						    .attr('height',function(d,i){
+						        return height - y2(cumul2[i]) - padding;
+						    })
+						    .attr('fill',function(d,i){
+						    	return "rgb("+(100+Math.round(150*i/l2))+",0,0)";
+						    })
+						console.log(cumul1)
+						console.log(cumul2)
+			    	})
+	    		}
+				//在柱部标识数据
+				svg.selectAll('text#vals')
+				    .data(data)
+				    .enter()
+				    .append('text')
+				    .attr('id','vals')
+				    .attr('fill','black')
+				    .attr('text-anchor','middle')
+				    .attr('font-size','14px')
+				    .attr('x',function(d,i){
+				        return x(i)+w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return y(d.ac_money) - padding;
+				    })
+				    .attr('dx',function(d,i){
+				        return w / 2;
+				    })
+				    .attr('dy',padding/2)
+				    .text(function(d){return d.ac_money})
+
+				svg.selectAll('text#items')
+				    .data(data)
+				    .enter()
+				    .append('text')
+				    .attr('id','items')
+				    .attr('fill','red')
+				    .attr('text-anchor','middle')
+				    .attr('font-size','14px')
+				    .attr('x',function(d,i){
+				        return x(i)+5*w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return y2(d.ac_item) - padding;
+				    })
+				    .attr('dx',function(d,i){
+				        return w / 2;
+				    })
+				    .attr('dy',padding/2)
+				    .text(function(d){return d.ac_item})
+
+				svg.selectAll('text#appvals')
+				    .data(data)
+				    .enter()
+				    .append('text')
+				    .attr('id','appvals')
+				    .attr('fill','black')
+				    .attr('text-anchor','middle')
+				    .attr('font-size','14px')
+				    .attr('x',function(d,i){
+				        return x(i)+w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return y(d.app_money) - padding;
+				    })
+				    .attr('dx',function(d,i){
+				        return w / 2;
+				    })
+				    .attr('dy',padding/2)
+				    .text(function(d){return d.app_money})
+
+				svg.selectAll('text#appitems')
+				    .data(data)
+				    .enter()
+				    .append('text')
+				    .attr('id','items')
+				    .attr('fill','red')
+				    .attr('text-anchor','middle')
+				    .attr('font-size','14px')
+				    .attr('x',function(d,i){
+				        return x(i)+5*w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return y2(d.app_item) - padding;
+				    })
+				    .attr('dx',function(d,i){
+				        return w / 2;
+				    })
+				    .attr('dy',padding/2)
+				    .text(function(d){return d.app_item})
+				
+				svg.selectAll('text#subject_name')
+				    .data(data)
+				    .enter()
+				    .append('text')
+				    .attr('id','subject_name')
+				    .attr('fill','black')
+				    .attr('text-anchor','middle')
+				    .attr('font-size','12px')
+				    .attr('x',function(d,i){
+				        return x(i)+3*w/4;
+				    })
+				    .attr('y',function(d,i){
+				        return height - padding/2;
+				    })
+				    .attr('dx',function(d,i){
+				        return w / 2;
+				    })
+				    .attr('dy',padding/2)
+				    .text(function(d){return d.subject})
 				//绘制坐标轴
-				svg.append('g').attr('transform',`translate(${left},${height-bottom})`).call(axisX)
-				svg.append('g').attr('transform',`translate(${left},10)`).call(axisY)
+				svg.append('g').attr('transform',`translate(0,${height-padding})`).call(axisX)
+				svg.append('g').attr('transform',`translate(${padding},0)`).call(axisY)
 			})
 		</script>
 	</body>
