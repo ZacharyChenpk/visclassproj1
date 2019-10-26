@@ -3,291 +3,149 @@
 	<head>
 		<meta charset="utf-8">
 		<title>D3: A simple, unstyled axis</title>
-		<script src="https://d3js.org/d3.v4.min.js"></script>
-		<style type="text/css">
-			/* No style rules here yet */
+		<link rel="stylesheet" type="text/css" href="d3.parcoords.css">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <style type="text/css">
+			
+			#tooltip {
+				position:absolute;
+				width: auto;
+				height: auto;
+				padding: 10px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+				white-space: pre;
+			}
+			
+			#tooltip.hidden {
+				display: none;
+			}
+			
+			#tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 16px;
+				line-height: 20px;
+			}
+
+			.legend{font-size: 12px; font-family:Arial, Helvetica, sans-serif}
+			/* parcoords */
+            #nutrients { height: 360px; width: 50%; padding: 8px 0 0; border-top: 1px solid #d0d0d0; }
+            #nutrients text { font-size: 10px; }
+            /* data table styles */
+            #grid { width: 100%; height: 200px; overflow: auto; border-top: 1px solid #d0d0d0; }
+            .row, .header { clear: left; font-size: 10px; line-height: 16px; height: 16px; width: 2000px; padding: 0 16px;}
+            .row:nth-child(odd) { background: rgba(0,0,0,0.05); }
+            .header { font-weight: bold; }
+            .cell { float: left; overflow: hidden; white-space: nowrap; width: 100px; height: 18px; }
+            .faded {opacity: 0.2 !important;}
+            .col-0 { width: 180px; }
 		</style>
+		<script src="https://d3js.org/d3.v4.js"></script>
+		<!--<script src="https://d3js.org/d3-color.v1.min.js"></script>
+        <script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+        <script src="https://d3js.org/d3-ease.v1.min.js"></script>
+        <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+        <script src="https://d3js.org/d3-timer.v1.min.js"></script>
+        <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+        <script src="https://d3js.org/d3-transition.v1.min.js"></script>
+        <script src="https://d3js.org/d3-drag.v1.min.js"></script>
+        <script src="https://d3js.org/d3-brush.v1.min.js"></script>
+        <script src="scripts/d3.svg.multibrush.js"></script>
+		<script src="scripts/render-queue.js"></script>
+		<script src="scripts/d3_v4.parcoords.js"></script>
+		<script src="scripts/divgrid.js"></script>
+        <script src="scripts/underscore.js"></script>-->
+        <script src="https://bl.ocks.org/syntagmatic/raw/3341641/render-queue.js"></script>
 	</head>
 	<body>
+		
+		<div id="tooltip" class="hidden">
+			<p><strong id="title">Important Label Heading</strong></p>
+			<p><span id="value">100</span></p>
+		</div>
+		
+		<!--<div id="nutrients" class="parcoords">
+			<p>	 合计项数 合计金额 教育部项数 教育部金额 中科院项数 中科院金额 各部门项数 各部门金额 各省项数 各省金额 教育部项数比例 教育部金额比例 中科院项数比例 中科院金额比例 各部门项数比例 各部门金额比例 各省项数比例 各省金额比例  </p>
+		</div>-->
+		<script defer src="scripts/legend.js"></script>
+        <script defer src="scripts/data1_all.js"></script>
+        <script defer src="scripts/data1_sub.js"></script>
+		<script defer src="scripts/data2.js"></script>
+		<script defer src="scripts/data3.js"></script>
 		<script type="text/javascript">
-			var rowConverter1 = function(d) {
-				return {
-					subject: d.subject,
-					ac_money: parseFloat(d.ac_money),
-					ac_item: parseFloat(d.ac_item),
-					app_item: parseFloat(d.app_item),
-					app_money: parseFloat(d.app_money),
-					en_name: d.en_name
-				};
-			}
-			var rowConverter2 = function(d) {
-				return {
-					subject: d.subject,
-					ac_money: parseFloat(d.ac_money),
-					ac_item: parseFloat(d.ac_item),
-					app_item: parseFloat(d.app_item),
-					app_money: parseFloat(d.app_money),
-					gg_item: parseFloat(d.app_item) - parseFloat(d.ac_item),
-					gg_money: parseFloat(d.app_money) - parseFloat(d.ac_money)
-				};
-			}
-			var data, data2;
-			var w = 40, //柱宽度
-			    height = 600,   //画布高度
-			    width = 900,  //画布宽度
-			    left = 50,
-			    bottom = 20;
-			    padding = 30;
 
-			d3.csv("data1.csv", rowConverter1, function(d){
-				console.log("A")
-				data = d
-				len = data.length
-				//创建线性比例尺
-				var x = d3.scaleLinear().domain([0,len]).range([padding, width-padding]);
-				var y = d3.scaleLinear().domain([0,d3.max(data,function(d) {return d.app_money;})]).range([height-padding,padding]);
-				var y2 = d3.scaleLinear().domain([0,d3.max(data,function(d) {return d.app_item;})]).range([height-padding,padding]);
-				//创建坐标轴
-				var axisX = d3.axisBottom().scale(x).ticks(len);
-				var axisY = d3.axisLeft().scale(y).ticks(len);
-				//创建svg画布
-				var svg = d3.select('body')
-				    .append('svg')
-				    .attr('width',width)
-				    .attr('height',height)
-				    .style('margin-left','100px')
-				    .style('padding','20px')
-				    .style('border','1px solid green')
-				//绘制数据柱状
-				svg.selectAll('rect#app_money')
-				    .data(data)
+			/*
+
+			d3.csv("data1_detail.csv", rowConverter2, function(d){
+				console.log("B")
+				var ys1 = [[],[],[],[],[],[],[],[]];
+				var ys2 = [[],[],[],[],[],[],[],[]];
+
+				data2 = d;
+				var len = d.length;
+				for (var i = 0;i < len;i++){
+					var f = data2[i].father;
+					console.log(f);
+					if(ys1[f].length===0){
+						ys1[f].push(data2[i].ac_money);
+						ys2[f].push(data2[i].ac_item);
+					}else{
+						var a = ys1[f].length;
+						ys1[f].push(data2[i].ac_money+ys1[f][a-1]);
+						ys2[f].push(data2[i].ac_item+ys2[f][a-1]);
+					}
+				}
+				ys1.reverse()
+				ys2.reverse()
+				svg.selectAll('rect#ac_money_d')
+				    .data(data2)
 				    .enter()
 				    .append('rect')
-				    .attr('id', 'app_money')
+				    .transition().duration(100).delay(function(d,i){return 100*i;})
+				    .attr('id', 'ac_money_d')
 				    .attr('x',function(d,i){
-				        return x(i)+w/4;
+				        return x(d.father)+w/4;
 				    })
 				    .attr('y',function(d,i){
-				        return y(d.app_money);
+				        return y(ys1[d.father][d.id]);
 				    })
 				    .attr('width',w)
 				    .attr('height',function(d,i){
-				        return height - y(d.app_money) - padding;
+				    	if(d.id===0)
+				    		return height - y(ys1[d.father][d.id]) - padding;
+				        return y(ys1[d.father][d.id]) - y(ys1[d.father][d.id-1]);
 				    })
-				    .attr('fill','gray')
+				    .attr('fill',function(d,i){
+				    	return "rgb(0,0,"+(150+100*(i%2))+")"
+				    })
 
-				svg.selectAll('rect#app_item')
-				    .data(data)
+				svg.selectAll('rect#ac_item_d')
+				    .data(data2)
 				    .enter()
 				    .append('rect')
-				    .attr('id', 'app_item')
+				    .attr('id', 'ac_item_d')
 				    .attr('x',function(d,i){
-				        return x(i)+5*w/4;
+				        return x(d.father)+5*w/4;
 				    })
 				    .attr('y',function(d,i){
-				        return y2(d.app_item);
+				        return y2(ys2[d.father][d.id]);
 				    })
 				    .attr('width',w)
 				    .attr('height',function(d,i){
-				        return height - y2(d.app_item) - padding;
+				        return height - y2(ys2[d.father][d.id]) - padding;
 				    })
-				    .attr('fill','gray')
-
-				svg.selectAll('rect#ac_money')
-				    .data(data)
-				    .enter()
-				    .append('rect')
-				    .attr('id', 'ac_money')
-				    .attr('x',function(d,i){
-				        return x(i)+w/4;
+				    .attr('fill',function(d,i){
+				    	return "rgb("+(150+100*(i%2))+",0,0)"
 				    })
-				    .attr('y',function(d,i){
-				        return y(d.ac_money);
-				    })
-				    .attr('width',w)
-				    .attr('height',function(d,i){
-				        return height - y(d.ac_money) - padding;
-				    })
-				    .attr('fill','steelblue')
-
-				svg.selectAll('rect#ac_item')
-				    .data(data)
-				    .enter()
-				    .append('rect')
-				    .attr('id', 'ac_item')
-				    .attr('x',function(d,i){
-				        return x(i)+5*w/4;
-				    })
-				    .attr('y',function(d,i){
-				        return y2(d.ac_item);
-				    })
-				    .attr('width',w)
-				    .attr('height',function(d,i){
-				        return height - y2(d.ac_item) - padding;
-				    })
-				    .attr('fill','orange')
-				console.log(data)
-				for (var iid = 0; iid < len; iid++){
-					var id = iid;
-			    	d3.csv("data1/"+data[id].en_name+".csv", rowConverter2, function(dd){
-			    		console.log(data[id].en_name)
-			    		console.log(dd)
-			    		data2 = dd;
-			    		l2 = data2.length;
-			    		var cumul1 = [],
-							cumul2 = [];
-			    		for (var i = 0; i < l2; i++){
-			    			if (i === 0){
-			    				cumul1.push(dd[i].ac_money);
-			    				cumul2.push(dd[i].ac_item);
-			    			}else{
-			    				cumul1.push(cumul1[i-1]+dd[i].ac_money);
-			    				cumul2.push(cumul2[i-1]+dd[i].ac_item);
-			    			}
-			    		}
-			    		cumul1 = cumul1.reverse()
-			    		cumul2 = cumul2.reverse()
-			    		svg.selectAll("rect#ac_money"+id)
-						    .data(data2)
-						    .enter()
-						    .append('rect')
-						    .attr('id', "ac_money"+id)
-						    .attr('x',x(id)+w/4)
-						    .attr('y',function(d,i){
-						        return y(cumul1[i]);
-						    })
-						    .attr('width',w)
-						    .attr('height',function(d,i){
-						        return height - y(cumul1[i]) - padding;
-						    })
-						    .attr('fill',function(d,i){
-						    	return "rgb(0,0,"+(100+Math.round(150*i/l2))+")";
-						    })
-
-						svg.selectAll("rect#ac_item"+id)
-						    .data(data2)
-						    .enter()
-						    .append('rect')
-						    .attr('id', "ac_item"+id)
-						    .attr('x',x(id)+5*w/4)
-						    .attr('y',function(d,i){
-						        return y2(cumul2[i]);
-						    })
-						    .attr('width',w)
-						    .attr('height',function(d,i){
-						        return height - y2(cumul2[i]) - padding;
-						    })
-						    .attr('fill',function(d,i){
-						    	return "rgb("+(100+Math.round(150*i/l2))+",0,0)";
-						    })
-						console.log(cumul1)
-						console.log(cumul2)
-			    	})
-	    		}
-				//在柱部标识数据
-				svg.selectAll('text#vals')
-				    .data(data)
-				    .enter()
-				    .append('text')
-				    .attr('id','vals')
-				    .attr('fill','black')
-				    .attr('text-anchor','middle')
-				    .attr('font-size','14px')
-				    .attr('x',function(d,i){
-				        return x(i)+w/4;
-				    })
-				    .attr('y',function(d,i){
-				        return y(d.ac_money) - padding;
-				    })
-				    .attr('dx',function(d,i){
-				        return w / 2;
-				    })
-				    .attr('dy',padding/2)
-				    .text(function(d){return d.ac_money})
-
-				svg.selectAll('text#items')
-				    .data(data)
-				    .enter()
-				    .append('text')
-				    .attr('id','items')
-				    .attr('fill','red')
-				    .attr('text-anchor','middle')
-				    .attr('font-size','14px')
-				    .attr('x',function(d,i){
-				        return x(i)+5*w/4;
-				    })
-				    .attr('y',function(d,i){
-				        return y2(d.ac_item) - padding;
-				    })
-				    .attr('dx',function(d,i){
-				        return w / 2;
-				    })
-				    .attr('dy',padding/2)
-				    .text(function(d){return d.ac_item})
-
-				svg.selectAll('text#appvals')
-				    .data(data)
-				    .enter()
-				    .append('text')
-				    .attr('id','appvals')
-				    .attr('fill','black')
-				    .attr('text-anchor','middle')
-				    .attr('font-size','14px')
-				    .attr('x',function(d,i){
-				        return x(i)+w/4;
-				    })
-				    .attr('y',function(d,i){
-				        return y(d.app_money) - padding;
-				    })
-				    .attr('dx',function(d,i){
-				        return w / 2;
-				    })
-				    .attr('dy',padding/2)
-				    .text(function(d){return d.app_money})
-
-				svg.selectAll('text#appitems')
-				    .data(data)
-				    .enter()
-				    .append('text')
-				    .attr('id','items')
-				    .attr('fill','red')
-				    .attr('text-anchor','middle')
-				    .attr('font-size','14px')
-				    .attr('x',function(d,i){
-				        return x(i)+5*w/4;
-				    })
-				    .attr('y',function(d,i){
-				        return y2(d.app_item) - padding;
-				    })
-				    .attr('dx',function(d,i){
-				        return w / 2;
-				    })
-				    .attr('dy',padding/2)
-				    .text(function(d){return d.app_item})
-				
-				svg.selectAll('text#subject_name')
-				    .data(data)
-				    .enter()
-				    .append('text')
-				    .attr('id','subject_name')
-				    .attr('fill','black')
-				    .attr('text-anchor','middle')
-				    .attr('font-size','12px')
-				    .attr('x',function(d,i){
-				        return x(i)+3*w/4;
-				    })
-				    .attr('y',function(d,i){
-				        return height - padding/2;
-				    })
-				    .attr('dx',function(d,i){
-				        return w / 2;
-				    })
-				    .attr('dy',padding/2)
-				    .text(function(d){return d.subject})
-				//绘制坐标轴
-				svg.append('g').attr('transform',`translate(0,${height-padding})`).call(axisX)
-				svg.append('g').attr('transform',`translate(${padding},0)`).call(axisY)
 			})
+			*/
 		</script>
 	</body>
 </html>
