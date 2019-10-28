@@ -111,7 +111,7 @@ d3.csv("data1_detail.csv", rowConverter2, function(d){
 			d3.select(this).attr("fill", "red")
 			//Get this bar's x/y values, then augment for the tooltip
 			var xPosition = parseFloat(d3.select(this).attr("x"))+600;
-			var yPosition = parseFloat(d3.select(this).attr("y"));
+			var yPosition = parseFloat(d3.select(this).attr("y"))+100;
 			//Update the tooltip position and value
 			d3.select("#tooltip")
 				//.html(d.subject)

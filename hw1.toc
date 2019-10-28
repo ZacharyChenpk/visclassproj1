@@ -1,0 +1,14 @@
+\contentsline {section}{\numberline {1}作业要求}{2}
+\contentsline {section}{\numberline {2}数据描述与分析}{2}
+\contentsline {subsection}{\numberline {2.1}按申请与资助情况统计}{2}
+\contentsline {subsection}{\numberline {2.2}按单位隶属关系统计}{3}
+\contentsline {subsection}{\numberline {2.3}按单位性质统计}{3}
+\contentsline {section}{\numberline {3}设计宗旨和设计过程}{4}
+\contentsline {subsection}{\numberline {3.1}表单1}{4}
+\contentsline {subsection}{\numberline {3.2}表单2、3}{4}
+\contentsline {subsection}{\numberline {3.3}可视化页面}{4}
+\contentsline {section}{\numberline {4}结果描述}{4}
+\contentsline {subsection}{\numberline {4.1}表单1}{4}
+\contentsline {subsection}{\numberline {4.2}表单2}{6}
+\contentsline {subsection}{\numberline {4.3}表单3}{6}
+\contentsline {section}{\numberline {5}总结与感受}{7}
